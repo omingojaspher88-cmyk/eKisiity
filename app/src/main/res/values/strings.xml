@@ -1,0 +1,17 @@
+<resources>
+    <string name="app_name">eKisiity</string>
+    <string name="tagline_campus">Kisii University Student Companion</string>
+    <string name="sign_in_with_google">Sign in with Google</string>
+    <string name="sign_in_subtitle">Sync your lecture schedule, timetable alerts, grades, and GPS-verified attendance across devices.</string>
+    <string name="nav_dashboard">Dashboard</string>
+    <string name="nav_portals">Portals</string>
+    <string name="nav_schedule">Schedule</string>
+    <string name="nav_grades">Grades</string>
+    <string name="nav_attend">Attend</string>
+    <string name="cd_campus_hero">Kisii University campus quad illustration</string>
+    <string name="cd_portal_banner">Digital university portals illustration</string>
+    <string name="cd_back">Navigate back</string>
+    <string name="cd_forward">Navigate forward</string>
+    <string name="cd_refresh">Reload portal</string>
+    <string name="cd_sign_out">Sign out</string>
+</resources>

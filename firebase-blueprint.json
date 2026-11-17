@@ -1,0 +1,310 @@
+{
+  "entities": {
+    "StudentProfile": {
+      "title": "StudentProfile",
+      "description": "Kisii University student academic profile stored at /users/{userId}.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Authenticated Firebase UID of the student."
+        },
+        "displayName": {
+          "type": "string",
+          "description": "Student full name."
+        },
+        "regNumber": {
+          "type": "string",
+          "description": "Kisii University registration number."
+        },
+        "programme": {
+          "type": "string",
+          "description": "Degree or diploma programme name."
+        },
+        "semesterLabel": {
+          "type": "string",
+          "description": "Active academic semester label."
+        },
+        "campus": {
+          "type": "string",
+          "description": "University campus name."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp set via FieldValue.serverTimestamp()."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp set via FieldValue.serverTimestamp()."
+        }
+      },
+      "required": [
+        "userId",
+        "displayName",
+        "regNumber",
+        "programme",
+        "semesterLabel",
+        "campus",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "LectureSession": {
+      "title": "LectureSession",
+      "description": "Scheduled lecture and timetable update item with lecture hall coordinates.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Authenticated Firebase UID of the student."
+        },
+        "courseCode": {
+          "type": "string",
+          "description": "Unit code such as COMP 314."
+        },
+        "courseTitle": {
+          "type": "string",
+          "description": "Full unit name."
+        },
+        "lecturer": {
+          "type": "string",
+          "description": "Assigned lecturer name."
+        },
+        "dayOfWeek": {
+          "type": "string",
+          "enum": ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY"],
+          "description": "Day of the week for the scheduled lecture."
+        },
+        "startTime": {
+          "type": "string",
+          "description": "24h start time (HH:mm)."
+        },
+        "endTime": {
+          "type": "string",
+          "description": "24h end time (HH:mm)."
+        },
+        "venueName": {
+          "type": "string",
+          "description": "Lecture hall or lab name."
+        },
+        "venueLat": {
+          "type": "number",
+          "description": "Lecture hall latitude."
+        },
+        "venueLng": {
+          "type": "number",
+          "description": "Lecture hall longitude."
+        },
+        "geofenceRadiusMeters": {
+          "type": "integer",
+          "description": "Allowed radius in meters for in-venue attendance verification."
+        },
+        "status": {
+          "type": "string",
+          "enum": ["SCHEDULED", "RESCHEDULED", "VENUE_CHANGED", "CANCELLED"],
+          "description": "Timetable status for this lecture."
+        },
+        "updateNote": {
+          "type": "string",
+          "description": "Timetable update notice or note."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp set via FieldValue.serverTimestamp()."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp set via FieldValue.serverTimestamp()."
+        }
+      },
+      "required": [
+        "userId",
+        "courseCode",
+        "courseTitle",
+        "lecturer",
+        "dayOfWeek",
+        "startTime",
+        "endTime",
+        "venueName",
+        "venueLat",
+        "venueLng",
+        "geofenceRadiusMeters",
+        "status",
+        "updateNote",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "CourseGrade": {
+      "title": "CourseGrade",
+      "description": "Course unit assessment breakdown and final grade tracking record.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Authenticated Firebase UID of the student."
+        },
+        "courseCode": {
+          "type": "string",
+          "description": "Unit code."
+        },
+        "courseTitle": {
+          "type": "string",
+          "description": "Unit title."
+        },
+        "semester": {
+          "type": "string",
+          "description": "Semester label."
+        },
+        "credits": {
+          "type": "integer",
+          "description": "Credit units (1-12)."
+        },
+        "catScore": {
+          "type": "number",
+          "description": "CAT score (0-30)."
+        },
+        "assignmentScore": {
+          "type": "number",
+          "description": "Assignment/lab score (0-20)."
+        },
+        "examScore": {
+          "type": "number",
+          "description": "Final exam score (0-70)."
+        },
+        "totalScore": {
+          "type": "number",
+          "description": "Total percentage score (0-100)."
+        },
+        "gradeLetter": {
+          "type": "string",
+          "enum": ["A", "B", "C", "D", "E"],
+          "description": "Kisii University letter grade."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp set via FieldValue.serverTimestamp()."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp set via FieldValue.serverTimestamp()."
+        }
+      },
+      "required": [
+        "userId",
+        "courseCode",
+        "courseTitle",
+        "semester",
+        "credits",
+        "catScore",
+        "assignmentScore",
+        "examScore",
+        "totalScore",
+        "gradeLetter",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "AttendanceRecord": {
+      "title": "AttendanceRecord",
+      "description": "Live location verified attendance check-in for a lecture session.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Authenticated Firebase UID of the student."
+        },
+        "lectureId": {
+          "type": "string",
+          "description": "Associated lecture document ID."
+        },
+        "courseCode": {
+          "type": "string",
+          "description": "Unit code."
+        },
+        "courseTitle": {
+          "type": "string",
+          "description": "Unit title."
+        },
+        "venueName": {
+          "type": "string",
+          "description": "Lecture hall name."
+        },
+        "recordedLat": {
+          "type": "number",
+          "description": "GPS latitude captured during check-in."
+        },
+        "recordedLng": {
+          "type": "number",
+          "description": "GPS longitude captured during check-in."
+        },
+        "accuracyMeters": {
+          "type": "number",
+          "description": "Reported GPS accuracy in meters."
+        },
+        "distanceMeters": {
+          "type": "number",
+          "description": "Computed distance in meters from lecture hall coordinates."
+        },
+        "verificationStatus": {
+          "type": "string",
+          "enum": ["VERIFIED_IN_VENUE", "NEAR_CAMPUS", "REMOTE_LOGGED"],
+          "description": "Venue verification outcome."
+        },
+        "sessionDate": {
+          "type": "string",
+          "description": "ISO date of lecture check-in (YYYY-MM-DD)."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp set via FieldValue.serverTimestamp()."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp set via FieldValue.serverTimestamp()."
+        }
+      },
+      "required": [
+        "userId",
+        "lectureId",
+        "courseCode",
+        "courseTitle",
+        "venueName",
+        "recordedLat",
+        "recordedLng",
+        "accuracyMeters",
+        "distanceMeters",
+        "verificationStatus",
+        "sessionDate",
+        "createdAt",
+        "updatedAt"
+      ]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/StudentProfile" },
+      "description": "Student profile and academic metadata."
+    },
+    "/users/{userId}/lectures/{lectureId}": {
+      "schema": { "$ref": "#/entities/LectureSession" },
+      "description": "Student lecture schedule and timetable updates."
+    },
+    "/users/{userId}/grades/{gradeId}": {
+      "schema": { "$ref": "#/entities/CourseGrade" },
+      "description": "Student course grades and assessment breakdown."
+    },
+    "/users/{userId}/attendance/{attendanceId}": {
+      "schema": { "$ref": "#/entities/AttendanceRecord" },
+      "description": "Location-verified lecture attendance log."
+    }
+  }
+}

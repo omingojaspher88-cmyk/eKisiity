@@ -1,0 +1,6 @@
+{
+  "name": "eKisiity",
+  "description": "Unified Kisii University student companion featuring embedded portals, timetable updates, lecture schedules, grade tracking, and live venue attendance.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

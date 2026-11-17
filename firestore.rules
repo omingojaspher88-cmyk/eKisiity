@@ -1,0 +1,222 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Global default-deny safety net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function isValidTimestamp(ts) {
+      return ts is timestamp && ts <= request.time;
+    }
+
+    function isValidStudentProfile(data) {
+      return data.userId is string && data.userId == request.auth.uid &&
+             data.displayName is string && data.displayName.size() >= 1 && data.displayName.size() <= 80 &&
+             data.regNumber is string && data.regNumber.size() <= 30 &&
+             data.programme is string && data.programme.size() <= 80 &&
+             data.semesterLabel is string && data.semesterLabel.size() >= 1 && data.semesterLabel.size() <= 40 &&
+             data.campus is string && data.campus.size() >= 1 && data.campus.size() <= 60;
+    }
+
+    function isValidLectureSession(data) {
+      return data.userId is string && data.userId == request.auth.uid &&
+             data.courseCode is string && data.courseCode.size() >= 2 && data.courseCode.size() <= 20 &&
+             data.courseTitle is string && data.courseTitle.size() >= 2 && data.courseTitle.size() <= 100 &&
+             data.lecturer is string && data.lecturer.size() <= 80 &&
+             data.dayOfWeek in ['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY'] &&
+             data.startTime is string && data.startTime.size() >= 4 && data.startTime.size() <= 10 &&
+             data.endTime is string && data.endTime.size() >= 4 && data.endTime.size() <= 10 &&
+             data.venueName is string && data.venueName.size() >= 2 && data.venueName.size() <= 80 &&
+             data.venueLat is number && data.venueLat >= -90 && data.venueLat <= 90 &&
+             data.venueLng is number && data.venueLng >= -180 && data.venueLng <= 180 &&
+             data.geofenceRadiusMeters is int && data.geofenceRadiusMeters >= 20 && data.geofenceRadiusMeters <= 500 &&
+             data.status in ['SCHEDULED', 'RESCHEDULED', 'VENUE_CHANGED', 'CANCELLED'] &&
+             data.updateNote is string && data.updateNote.size() <= 200;
+    }
+
+    function isValidCourseGrade(data) {
+      return data.userId is string && data.userId == request.auth.uid &&
+             data.courseCode is string && data.courseCode.size() >= 2 && data.courseCode.size() <= 20 &&
+             data.courseTitle is string && data.courseTitle.size() >= 2 && data.courseTitle.size() <= 100 &&
+             data.semester is string && data.semester.size() >= 2 && data.semester.size() <= 40 &&
+             data.credits is int && data.credits >= 1 && data.credits <= 12 &&
+             data.catScore is number && data.catScore >= 0 && data.catScore <= 30 &&
+             data.assignmentScore is number && data.assignmentScore >= 0 && data.assignmentScore <= 20 &&
+             data.examScore is number && data.examScore >= 0 && data.examScore <= 70 &&
+             data.totalScore is number && data.totalScore >= 0 && data.totalScore <= 100 &&
+             data.gradeLetter in ['A', 'B', 'C', 'D', 'E'];
+    }
+
+    function isValidAttendanceRecord(data) {
+      return data.userId is string && data.userId == request.auth.uid &&
+             isValidId(data.lectureId) &&
+             data.courseCode is string && data.courseCode.size() >= 2 && data.courseCode.size() <= 20 &&
+             data.courseTitle is string && data.courseTitle.size() >= 2 && data.courseTitle.size() <= 100 &&
+             data.venueName is string && data.venueName.size() >= 2 && data.venueName.size() <= 80 &&
+             data.recordedLat is number && data.recordedLat >= -90 && data.recordedLat <= 90 &&
+             data.recordedLng is number && data.recordedLng >= -180 && data.recordedLng <= 180 &&
+             data.accuracyMeters is number && data.accuracyMeters >= 0 && data.accuracyMeters <= 5000 &&
+             data.distanceMeters is number && data.distanceMeters >= 0 && data.distanceMeters <= 5000000 &&
+             data.verificationStatus in ['VERIFIED_IN_VENUE', 'NEAR_CAMPUS', 'REMOTE_LOGGED'] &&
+             data.sessionDate is string && data.sessionDate.size() >= 6 && data.sessionDate.size() <= 20;
+    }
+
+    match /users/{userId} {
+      allow get: if isOwner(userId) && isValidId(userId);
+      allow list: if isOwner(userId);
+      allow create: if isOwner(userId) &&
+                       isValidId(userId) &&
+                       incoming().keys().hasAll([
+                         'userId', 'displayName', 'regNumber', 'programme',
+                         'semesterLabel', 'campus', 'createdAt', 'updatedAt'
+                       ]) &&
+                       incoming().keys().hasOnly([
+                         'userId', 'displayName', 'regNumber', 'programme',
+                         'semesterLabel', 'campus', 'createdAt', 'updatedAt'
+                       ]) &&
+                       isValidTimestamp(incoming().createdAt) &&
+                       isValidTimestamp(incoming().updatedAt) &&
+                       isValidStudentProfile(incoming());
+      allow update: if isOwner(userId) &&
+                       isValidId(userId) &&
+                       isValidStudentProfile(incoming()) &&
+                       incoming().userId == existing().userId &&
+                       incoming().createdAt == existing().createdAt &&
+                       isValidTimestamp(incoming().updatedAt) &&
+                       incoming().diff(existing()).affectedKeys().hasOnly([
+                         'displayName', 'regNumber', 'programme',
+                         'semesterLabel', 'campus', 'updatedAt'
+                       ]);
+      allow delete: if isOwner(userId) && isValidId(userId);
+
+      match /lectures/{lectureId} {
+        allow get: if isOwner(userId) && isValidId(lectureId);
+        allow list: if isOwner(userId);
+        allow create: if isOwner(userId) &&
+                         isValidId(lectureId) &&
+                         incoming().keys().hasAll([
+                           'userId', 'courseCode', 'courseTitle', 'lecturer',
+                           'dayOfWeek', 'startTime', 'endTime', 'venueName',
+                           'venueLat', 'venueLng', 'geofenceRadiusMeters',
+                           'status', 'updateNote', 'createdAt', 'updatedAt'
+                         ]) &&
+                         incoming().keys().hasOnly([
+                           'userId', 'courseCode', 'courseTitle', 'lecturer',
+                           'dayOfWeek', 'startTime', 'endTime', 'venueName',
+                           'venueLat', 'venueLng', 'geofenceRadiusMeters',
+                           'status', 'updateNote', 'createdAt', 'updatedAt'
+                         ]) &&
+                         isValidTimestamp(incoming().createdAt) &&
+                         isValidTimestamp(incoming().updatedAt) &&
+                         isValidLectureSession(incoming());
+        allow update: if isOwner(userId) &&
+                         isValidId(lectureId) &&
+                         isValidLectureSession(incoming()) &&
+                         incoming().userId == existing().userId &&
+                         incoming().createdAt == existing().createdAt &&
+                         isValidTimestamp(incoming().updatedAt) &&
+                         (
+                           incoming().diff(existing()).affectedKeys().hasOnly([
+                             'courseCode', 'courseTitle', 'lecturer', 'dayOfWeek',
+                             'startTime', 'endTime', 'venueName', 'venueLat',
+                             'venueLng', 'geofenceRadiusMeters', 'status',
+                             'updateNote', 'updatedAt'
+                           ]) ||
+                           incoming().diff(existing()).affectedKeys().hasOnly([
+                             'status', 'venueName', 'venueLat', 'venueLng',
+                             'startTime', 'endTime', 'updateNote', 'updatedAt'
+                           ])
+                         );
+        allow delete: if isOwner(userId) && isValidId(lectureId);
+      }
+
+      match /grades/{gradeId} {
+        allow get: if isOwner(userId) && isValidId(gradeId);
+        allow list: if isOwner(userId);
+        allow create: if isOwner(userId) &&
+                         isValidId(gradeId) &&
+                         incoming().keys().hasAll([
+                           'userId', 'courseCode', 'courseTitle', 'semester',
+                           'credits', 'catScore', 'assignmentScore', 'examScore',
+                           'totalScore', 'gradeLetter', 'createdAt', 'updatedAt'
+                         ]) &&
+                         incoming().keys().hasOnly([
+                           'userId', 'courseCode', 'courseTitle', 'semester',
+                           'credits', 'catScore', 'assignmentScore', 'examScore',
+                           'totalScore', 'gradeLetter', 'createdAt', 'updatedAt'
+                         ]) &&
+                         isValidTimestamp(incoming().createdAt) &&
+                         isValidTimestamp(incoming().updatedAt) &&
+                         isValidCourseGrade(incoming());
+        allow update: if isOwner(userId) &&
+                         isValidId(gradeId) &&
+                         isValidCourseGrade(incoming()) &&
+                         incoming().userId == existing().userId &&
+                         incoming().createdAt == existing().createdAt &&
+                         isValidTimestamp(incoming().updatedAt) &&
+                         incoming().diff(existing()).affectedKeys().hasOnly([
+                           'courseCode', 'courseTitle', 'semester', 'credits',
+                           'catScore', 'assignmentScore', 'examScore',
+                           'totalScore', 'gradeLetter', 'updatedAt'
+                         ]);
+        allow delete: if isOwner(userId) && isValidId(gradeId);
+      }
+
+      match /attendance/{attendanceId} {
+        allow get: if isOwner(userId) && isValidId(attendanceId);
+        allow list: if isOwner(userId);
+        allow create: if isOwner(userId) &&
+                         isValidId(attendanceId) &&
+                         incoming().keys().hasAll([
+                           'userId', 'lectureId', 'courseCode', 'courseTitle',
+                           'venueName', 'recordedLat', 'recordedLng',
+                           'accuracyMeters', 'distanceMeters',
+                           'verificationStatus', 'sessionDate', 'createdAt', 'updatedAt'
+                         ]) &&
+                         incoming().keys().hasOnly([
+                           'userId', 'lectureId', 'courseCode', 'courseTitle',
+                           'venueName', 'recordedLat', 'recordedLng',
+                           'accuracyMeters', 'distanceMeters',
+                           'verificationStatus', 'sessionDate', 'createdAt', 'updatedAt'
+                         ]) &&
+                         isValidTimestamp(incoming().createdAt) &&
+                         isValidTimestamp(incoming().updatedAt) &&
+                         isValidAttendanceRecord(incoming());
+        allow update: if isOwner(userId) &&
+                         isValidId(attendanceId) &&
+                         existing().verificationStatus != 'VERIFIED_IN_VENUE' &&
+                         isValidAttendanceRecord(incoming()) &&
+                         incoming().userId == existing().userId &&
+                         incoming().lectureId == existing().lectureId &&
+                         incoming().createdAt == existing().createdAt &&
+                         isValidTimestamp(incoming().updatedAt) &&
+                         incoming().diff(existing()).affectedKeys().hasOnly([
+                           'recordedLat', 'recordedLng', 'accuracyMeters',
+                           'distanceMeters', 'verificationStatus', 'updatedAt'
+                         ]);
+        allow delete: if isOwner(userId) && isValidId(attendanceId);
+      }
+    }
+  }
+}
